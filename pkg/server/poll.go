@@ -4,18 +4,22 @@ import (
 	"log"
 	"net"
 
+	"github.com/ameyw07/go-kv-store/pkg/shard"
 	"golang.org/x/sys/unix"
 )
 
 type IOMultiplexer struct {
+	wakeUpFdToConnFd map[int32]int32
 }
 
-func NewIOMultiplexer(fd int) *IOMultiplexer {
+func NewIOMultiplexer() *IOMultiplexer {
 
-	return &IOMultiplexer{}
+	return &IOMultiplexer{
+		wakeUpFdToConnFd: make(map[int32]int32),
+	}
 }
 
-func (iomx *IOMultiplexer) StartPollWorker() {
+func (iomx *IOMultiplexer) StartPollWorker(sc *shard.ShardController) {
 	ln, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		log.Fatal(err)

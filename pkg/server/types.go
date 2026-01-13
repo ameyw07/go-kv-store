@@ -1,6 +1,8 @@
 package server
 
-type EpollData struct {
-	fd  int
-	cmd byte
+type CmdData struct {
+	wakeUpFd int
+	cmd      byte
+	resp     string
+	err      error
 }

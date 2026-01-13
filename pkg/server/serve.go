@@ -3,6 +3,8 @@ package server
 import (
 	"fmt"
 	"runtime"
+
+	"github.com/ameyw07/go-kv-store/pkg/shard"
 )
 
 var NumWorkers = -1
@@ -19,9 +21,11 @@ func Serve() {
 	// The Go runtime defaults GOMAXPROCS to the number of CPUs.
 	// We can explicitly set it, though it's often not needed for this pattern.
 
+	sc := shard.NewShardController(NumWorkers)
+
 	// TODO: switch to waitGroup
 	for i := 0; i < NumWorkers; i++ {
-		iomx := IOMultiplexer{}
-		go iomx.StartPollWorker()
+		iomx := NewIOMultiplexer()
+		go iomx.StartPollWorker(sc)
 	}
 }
