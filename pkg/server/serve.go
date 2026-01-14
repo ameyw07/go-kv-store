@@ -26,6 +26,8 @@ func Serve() {
 	// TODO: switch to waitGroup
 	for i := 0; i < NumWorkers; i++ {
 		iomx := NewIOMultiplexer()
+		go sc.Shards[i].ExecuteCommand()
 		go iomx.StartPollWorker(sc)
+
 	}
 }

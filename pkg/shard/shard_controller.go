@@ -6,25 +6,25 @@ import (
 )
 
 type ShardController struct {
-	shards    []*Shard
+	Shards    []*Shard
 	numShards int
 }
 
 func NewShardController(numShards int) *ShardController {
 
 	sc := &ShardController{
-		shards:    make([]*Shard, 0),
+		Shards:    make([]*Shard, 0),
 		numShards: numShards,
 	}
 
 	for i := 0; i < numShards; i++ {
-		sc.shards = append(sc.shards, NewShard(i))
+		sc.Shards = append(sc.Shards, NewShard(i))
 	}
 
 	return sc
 }
 
-func (sc *ShardController) chooseShard(key string) uint64 {
+func (sc *ShardController) ChooseShard(key string) uint64 {
 
 	var h maphash.Hash
 	h.Write([]byte(key))
