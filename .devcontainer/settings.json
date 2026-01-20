@@ -1,0 +1,17 @@
+{
+  "go.useLanguageServer": true,
+  "go.gopath": "/go",
+  "go.toolsGopath": "/go",
+  "go.goroot": "/usr/local/go",
+
+  "go.lintTool": "golangci-lint",
+  "go.lintOnSave": "package",
+  "go.formatTool": "gofmt",
+
+  "go.testFlags": ["-v"],
+  "go.testTimeout": "10s",
+
+  "go.toolsManagement.autoUpdate": false,
+
+  "editor.formatOnSave": true
+}
