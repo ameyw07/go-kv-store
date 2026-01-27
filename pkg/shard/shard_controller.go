@@ -17,7 +17,7 @@ func NewShardController(numShards int) *ShardController {
 		numShards: numShards,
 	}
 
-	for i := 0; i < numShards; i++ {
+	for i := range numShards {
 		sc.Shards = append(sc.Shards, NewShard(i))
 	}
 

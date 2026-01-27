@@ -7,4 +7,6 @@ type CmdData struct {
 	OutResp  string
 }
 
-const CMDDATA_CHANNEL_BOUND = 1000
+const (
+	CMDDATA_CHANNEL_BOUND = 1000
+)

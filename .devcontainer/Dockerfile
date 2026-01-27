@@ -1,4 +1,4 @@
-FROM golang:1.23-bookworm
+FROM golang:1.25-bookworm
 
 # ---- basic OS deps ----
 RUN apt-get update && apt-get install -y \

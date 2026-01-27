@@ -1,11 +1,15 @@
 package server
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"strings"
+	"sync"
+	"syscall"
 
 	"github.com/ameyw07/go-kv-store/pkg/shard"
 	"golang.org/x/sys/unix"
@@ -22,8 +26,31 @@ func NewIOMultiplexer() *IOMultiplexer {
 	}
 }
 
-func (iomx *IOMultiplexer) StartPollWorker(sc *shard.ShardController) {
-	ln, err := net.Listen("tcp", ":8080")
+func (iomx *IOMultiplexer) StartPollWorker(sc *shard.ShardController, wg *sync.WaitGroup) {
+	defer wg.Done()
+	lc := net.ListenConfig{
+		Control: func(network, address string, c syscall.RawConn) error {
+			return c.Control(func(fd uintptr) {
+				// Allow address reuse
+				_ = unix.SetsockoptInt(
+					int(fd),
+					unix.SOL_SOCKET,
+					unix.SO_REUSEADDR,
+					1,
+				)
+
+				// Allow port reuse (Linux)
+				_ = unix.SetsockoptInt(
+					int(fd),
+					unix.SOL_SOCKET,
+					unix.SO_REUSEPORT,
+					1,
+				)
+			})
+		},
+	}
+
+	ln, err := lc.Listen(context.Background(), "tcp", ":9999")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,8 +73,18 @@ func (iomx *IOMultiplexer) StartPollWorker(sc *shard.ShardController) {
 	for {
 		n_events, err := unix.EpollWait(epfd, events, 1)
 		if err != nil {
+
+			if _, ok := err.(net.Error); ok {
+				continue
+			}
+
+			// Handle EINTR explicitly
+			if errors.Is(err, syscall.EINTR) {
+				continue
+			}
+
+			// log.Println("Hi")
 			log.Println(err)
-			continue
 		}
 
 		for i := 0; i < n_events; i++ {
@@ -55,6 +92,7 @@ func (iomx *IOMultiplexer) StartPollWorker(sc *shard.ShardController) {
 				// accept conn
 				conn, err := ln.Accept()
 				if err != nil {
+
 					log.Println(err)
 					continue
 				}
@@ -128,7 +166,15 @@ func (iomx *IOMultiplexer) StartPollWorker(sc *shard.ShardController) {
 					WakeUpFd: wakeUpFd,
 				}
 
-				sc.Shards[shardIdx].CmdsShare <- cmdData
+				select {
+				case sc.Shards[shardIdx].CmdsShare <- cmdData:
+					fmt.Println("Sent the command to the hard")
+				default:
+
+					fmt.Println(CMDOVERLOAD_RESP)
+
+					unix.Write(clientFd, []byte(CMDOVERLOAD_RESP))
+				}
 
 			}
 
